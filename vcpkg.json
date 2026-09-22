@@ -1,0 +1,13 @@
+{
+    "builtin-baseline": "930ecc42b512b564571d767f70775d284a6fa307",
+    "dependencies": [
+        {
+            "name": "fmt",
+            "version>=": "12.2.0"
+        },
+        {
+            "name": "safetyhook",
+            "version>=": "0.7.0"
+        }
+    ]
+}
