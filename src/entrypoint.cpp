@@ -11,6 +11,11 @@ using namespace console;
 
 static auto hk_send_client_message = safetyhook::InlineHook{};
 
+// credit: https://github.com/blurite/rsprox
+static auto read_u16_alt3(std::uint16_t value) -> std::uint16_t {
+    return static_cast<std::uint16_t>((value & 0xFF) | (((value & 0xFF) - 128) & 0xFF));
+}
+
 // jag::oldscape::ServerConnection::Writer_SendClientMessage
 static auto hk_fn_send_client_message(void* base, void* callback, client_message* msg) -> void* {
     const auto opcode = msg->opcode;
@@ -18,14 +23,13 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
 
     const auto payload = std::span<std::uint8_t>(msg->packet.data + 1, size);
 
+    // log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
+
     // EVENT_MOUSE_CLICK_V1
     if (opcode == 0) {
-        log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
-
         mouse_click_v1 click{};
         std::memcpy(&click, payload.data(), sizeof(click));
 
-        // packets are big endian
         click.packed = std::byteswap(click.packed);
         click.x = std::byteswap(click.x);
         click.y = std::byteswap(click.y);
@@ -34,6 +38,22 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
         const auto time = click.packed >> 1;
 
         log::info("right {} time {} x {} y {}", right, time, click.x, click.y);
+    }
+
+    // EVENT_MOUSE_CLICK_V2
+    if (opcode == 40) {
+        mouse_click_v2 click{};
+        std::memcpy(&click, payload.data(), sizeof(click));
+
+        click.code = std::byteswap(click.code);
+        click.y = read_u16_alt3(click.y);
+        click.packed = std::byteswap(click.packed);
+        click.x = read_u16_alt3(click.x);
+
+        const auto right = (click.packed & 1) != 0;
+        const auto time = click.packed >> 1;
+
+        log::info("code {} right {} time {} x {} y {}", click.code, right, time, click.x, click.y);
     }
 
     return hk_send_client_message.call<void*>(base, callback, msg);

@@ -11,9 +11,9 @@ find_package(safetyhook CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
     src/osrs.cpp
-    src/init.cpp
     src/memory.cpp
     src/modules.cpp
+    src/entrypoint.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)

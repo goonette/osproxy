@@ -39,6 +39,16 @@ struct mouse_click_v1 {
 };
 static_assert(sizeof(mouse_click_v1) == 0x6);
 
+#pragma pack(push, 1)
+struct mouse_click_v2 {
+    /* 0x0000 */ std::uint8_t code;
+    /* 0x0001 */ std::uint16_t y;
+    /* 0x0003 */ std::uint16_t packed;
+    /* 0x0005 */ std::uint16_t x;
+};
+static_assert(sizeof(mouse_click_v2) == 0x7);
+#pragma pack(pop)
+
 inline std::uint8_t* hk_send_client_message_addr = {};
 
 auto init(std::span<std::uint8_t> region) -> void;
