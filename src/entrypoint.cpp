@@ -23,10 +23,9 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
 
     const auto payload = std::span<std::uint8_t>(msg->packet.data + 1, size);
 
-    // log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
+    if (opcode == EVENT_MOUSE_CLICK_V1) {
+        log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
 
-    // EVENT_MOUSE_CLICK_V1
-    if (opcode == 0) {
         mouse_click_v1 click{};
         std::memcpy(&click, payload.data(), sizeof(click));
 
@@ -40,8 +39,9 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
         log::info("right {} time {} x {} y {}", right, time, click.x, click.y);
     }
 
-    // EVENT_MOUSE_CLICK_V2
-    if (opcode == 40) {
+    if (opcode == EVENT_MOUSE_CLICK_V2) {
+        log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
+
         mouse_click_v2 click{};
         std::memcpy(&click, payload.data(), sizeof(click));
 
@@ -50,6 +50,7 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
         click.packed = std::byteswap(click.packed);
         click.x = read_u16_alt3(click.x);
 
+        // right seems to always be false here
         const auto right = (click.packed & 1) != 0;
         const auto time = click.packed >> 1;
 

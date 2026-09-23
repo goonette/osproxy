@@ -4,6 +4,11 @@
 
 namespace osrs {
 
+enum client_opcodes : std::uint32_t {
+    EVENT_MOUSE_CLICK_V1 = 0,
+    EVENT_MOUSE_CLICK_V2 = 40,
+};
+
 struct isaac {
     /* 0x0000 */ std::uint32_t count;
     /* 0x0004 */ std::uint32_t results[256];
