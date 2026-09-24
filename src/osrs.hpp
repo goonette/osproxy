@@ -7,6 +7,14 @@ namespace osrs {
 enum client_opcodes : std::uint32_t {
     EVENT_MOUSE_CLICK_V1 = 0,
     EVENT_MOUSE_CLICK_V2 = 40,
+
+    MOVE_GAMECLICK = 102,
+};
+
+enum key_combo : std::uint8_t {
+    NONE = 0,
+    CTRL = 1,
+    CTRL_SHIFT = 2,
 };
 
 struct isaac {
@@ -52,6 +60,13 @@ struct mouse_click_v2 {
     /* 0x0005 */ std::uint16_t x;
 };
 static_assert(sizeof(mouse_click_v2) == 0x7);
+
+struct move_game_click {
+    /* 0x0000 */ std::uint16_t y;
+    /* 0x0002 */ std::uint8_t key_combo;
+    /* 0x0003 */ std::uint16_t x;
+};
+static_assert(sizeof(move_game_click) == 0x5);
 #pragma pack(pop)
 
 inline std::uint8_t* hk_send_client_message_addr = {};

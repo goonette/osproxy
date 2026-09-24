@@ -12,16 +12,27 @@ using namespace console;
 static auto hk_send_client_message = safetyhook::InlineHook{};
 
 // credit: https://github.com/blurite/rsprox
+static auto read_u8(std::uint8_t value) -> std::uint8_t { return std::byteswap(value); }
+
+static auto read_u8_alt2(std::uint8_t value) -> std::uint8_t {
+    const auto be = std::byteswap(value);
+    return (0 - be) & 0xFF;
+}
+
+static auto read_u16(std::uint16_t value) -> std::uint16_t { return std::byteswap(value); }
+
 static auto read_u16_alt3(std::uint16_t value) -> std::uint16_t {
-    return static_cast<std::uint16_t>((value & 0xFF) | (((value & 0xFF) - 128) & 0xFF));
+    const auto be = std::byteswap(value);
+    return static_cast<std::uint16_t>((((be >> 8) - 128) & 0xFF) | ((be & 0xFF) << 8));
 }
 
 // jag::oldscape::ServerConnection::Writer_SendClientMessage
 static auto hk_fn_send_client_message(void* base, void* callback, client_message* msg) -> void* {
     const auto opcode = msg->opcode;
+    const auto length = msg->packet.pos;
     const auto size = msg->size;
 
-    const auto payload = std::span<std::uint8_t>(msg->packet.data + 1, size);
+    const auto payload = std::span<std::uint8_t>(msg->packet.data + 1, length - 1);
 
     if (opcode == EVENT_MOUSE_CLICK_V1) {
         log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
@@ -29,9 +40,9 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
         mouse_click_v1 click{};
         std::memcpy(&click, payload.data(), sizeof(click));
 
-        click.packed = std::byteswap(click.packed);
-        click.x = std::byteswap(click.x);
-        click.y = std::byteswap(click.y);
+        click.packed = read_u16(click.packed);
+        click.x = read_u16(click.x);
+        click.y = read_u16(click.y);
 
         const auto right = (click.packed & 1) != 0;
         const auto time = click.packed >> 1;
@@ -45,9 +56,9 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
         mouse_click_v2 click{};
         std::memcpy(&click, payload.data(), sizeof(click));
 
-        click.code = std::byteswap(click.code);
+        click.code = read_u8(click.code);
         click.y = read_u16_alt3(click.y);
-        click.packed = std::byteswap(click.packed);
+        click.packed = read_u16(click.packed);
         click.x = read_u16_alt3(click.x);
 
         // right seems to always be false here
@@ -55,6 +66,21 @@ static auto hk_fn_send_client_message(void* base, void* callback, client_message
         const auto time = click.packed >> 1;
 
         log::info("code {} right {} time {} x {} y {}", click.code, right, time, click.x, click.y);
+    }
+
+    if (opcode == MOVE_GAMECLICK) {
+        log::info("opcode {} size {} payload {:02x}", opcode, size, fmt::join(payload, " "));
+
+        move_game_click click{};
+        std::memcpy(&click, payload.data(), sizeof(click));
+
+        click.y = read_u16_alt3(click.y);
+        click.key_combo = read_u8_alt2(click.key_combo);
+        click.x = read_u16_alt3(click.x);
+
+        // x and y naming is based on the assumption that the camera is facing north/south
+        // game is broken up into chunks of 255x255 tiles
+        log::info("combo {} x {} y {}", click.key_combo, click.x / 255, click.y / 255);
     }
 
     return hk_send_client_message.call<void*>(base, callback, msg);
