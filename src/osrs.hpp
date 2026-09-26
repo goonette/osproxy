@@ -11,12 +11,6 @@ enum client_opcodes : std::uint32_t {
     MOVE_GAMECLICK = 102,
 };
 
-enum key_combo : std::uint8_t {
-    NONE = 0,
-    CTRL = 1,
-    CTRL_SHIFT = 2,
-};
-
 struct isaac {
     /* 0x0000 */ std::uint32_t count;
     /* 0x0004 */ std::uint32_t results[256];
@@ -37,13 +31,13 @@ struct packet {
 };
 static_assert(sizeof(packet) == 0x30);
 
-struct client_message {
+struct message {
     /* 0x0000 */ std::uint32_t opcode;
     /* 0x0004 */ std::int32_t size;
     /* 0x0008 */ packet packet;
     /* 0x0038 */ std::uint8_t pad_0038[4];
 };
-static_assert(sizeof(client_message) == 0x40);
+static_assert(sizeof(message) == 0x40);
 
 struct mouse_click_v1 {
     /* 0x0000 */ std::uint16_t packed;

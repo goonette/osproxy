@@ -11,7 +11,6 @@ using namespace console;
 
 static auto hk_send_client_message = safetyhook::InlineHook{};
 
-// credit: https://github.com/blurite/rsprox
 static auto read_u8(std::uint8_t value) -> std::uint8_t { return std::byteswap(value); }
 
 static auto read_u8_alt2(std::uint8_t value) -> std::uint8_t {
@@ -27,7 +26,7 @@ static auto read_u16_alt3(std::uint16_t value) -> std::uint16_t {
 }
 
 // jag::oldscape::ServerConnection::Writer_SendClientMessage
-static auto hk_fn_send_client_message(void* base, void* callback, client_message* msg) -> void* {
+static auto hk_fn_send_client_message(void* base, void* callback, message* msg) -> void* {
     const auto opcode = msg->opcode;
     const auto length = msg->packet.pos;
     const auto size = msg->size;
